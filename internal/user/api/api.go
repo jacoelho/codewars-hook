@@ -13,30 +13,32 @@ import (
 const apiEndpoint = "https://www.codewars.com/api/v1/users/"
 
 type Repo struct {
-	client *http.Client
-	values map[string]user.User
+	Client   *http.Client
+	Endpoint string
 
-	mu sync.RWMutex
+	values map[string]user.User
+	mu     sync.RWMutex
 }
 
 func New(client *http.Client) *Repo {
 	return &Repo{
-		client: client,
-		values: make(map[string]user.User),
+		Client:   client,
+		Endpoint: apiEndpoint,
+		values:   make(map[string]user.User),
 	}
 }
 
 func (r *Repo) fetchFromAPI(ctx context.Context, id string) (user.User, error) {
 	var fetchedUser user.User
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, apiEndpoint+id, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, r.Endpoint+id, nil)
 	if err != nil {
 		return fetchedUser, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	req.Header.Set("Content-Type", "Content-Type: application/json")
 
-	resp, err := r.client.Do(req)
+	resp, err := r.Client.Do(req)
 	if err != nil {
 		return fetchedUser, fmt.Errorf("failed to send request: %w", err)
 	}
