@@ -9,6 +9,7 @@ import (
 func New() *zap.Logger {
 	config := zap.NewProductionConfig()
 	config.DisableCaller = true
+	config.DisableStacktrace = true
 	config.EncoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
 
 	logger, err := config.Build()

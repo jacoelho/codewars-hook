@@ -2,12 +2,14 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"net"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/justinas/alice"
+	"go.uber.org/zap"
 
 	"github.com/jacoelho/codewars/internal/log"
 	"github.com/jacoelho/codewars/internal/notifier/slack"
@@ -26,14 +28,47 @@ func getEnvOrDefault(key, def string) string {
 	return v
 }
 
+type Config struct {
+	Port      string
+	SlackHook string
+	Secret    string
+}
+
+func (c *Config) Flags() {
+	flag.StringVar(&c.Port, "port", getEnvOrDefault("PORT", "8080"), "listen port (env: PORT)")
+	flag.StringVar(&c.SlackHook, "slack-webhook", getEnvOrDefault("SLACK_WEBHOOK", ""), "slack webhook (env: SLACK_WEBHOOK)")
+	flag.StringVar(&c.Secret, "secret", getEnvOrDefault("SECRET", "secret"), "authentication secret (env: SECRET)")
+}
+
+func (c *Config) Validate() []error {
+	errs := []error{}
+
+	if c.Port == "" {
+		errs = append(errs, fmt.Errorf("invalid port"))
+	}
+
+	if c.SlackHook == "" {
+		errs = append(errs, fmt.Errorf("invalid slack webhook"))
+	}
+
+	if c.Secret == "" {
+		errs = append(errs, fmt.Errorf("invalid secret"))
+	}
+
+	return errs
+}
+
 func main() {
 	logger := log.New()
 
-	port := flag.String("port", getEnvOrDefault("PORT", "8080"), "listen port")
-	slackWebHook := flag.String("slack-webhook", getEnvOrDefault("SLACK_WEBHOOK", ""), "slack webhook")
-	secret := flag.String("secret", getEnvOrDefault("SECRET", "secret"), "authentication secret")
+	cfg := &Config{}
+	cfg.Flags()
 
 	flag.Parse()
+
+	if validateErrs := cfg.Validate(); len(validateErrs) > 0 {
+		logger.Fatal("invalid configuration", zap.Errors("error", validateErrs))
+	}
 
 	httpClient := &http.Client{
 		Transport: &http.Transport{
@@ -56,7 +91,7 @@ func main() {
 	svc := usecase.UserHonorUpdatedCase(
 		&slack.Webhook{
 			Client:   httpClient,
-			Endpoint: *slackWebHook,
+			Endpoint: cfg.SlackHook,
 		},
 		api.New(httpClient),
 	)
@@ -66,9 +101,9 @@ func main() {
 	chain := alice.New(
 		web.LoggingHandler(logger),
 		web.LimitBodySize(1<<20),
-		web.AllowedWebhookSecret(*secret),
+		web.AllowedWebhookSecret(cfg.Secret),
 		web.AllowedWebhookEventType("user"),
 	).Then(r)
 
-	web.HTTPServerRunWith(logger, ":"+*port, chain)
+	web.HTTPServerRunWith(logger, ":"+cfg.Port, chain)
 }
