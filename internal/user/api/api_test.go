@@ -49,7 +49,10 @@ func TestFetchFromAPI(t *testing.T) {
 		}
 	 }`
 
+	var calls int
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+
 		w.WriteHeader(http.StatusOK)
 		//nolint:errcheck
 		w.Write([]byte(payload))
@@ -59,6 +62,12 @@ func TestFetchFromAPI(t *testing.T) {
 	r := api.New(http.DefaultClient)
 	r.Endpoint = server.URL + "/"
 
+	_, err := r.GetUserByID(context.Background(), "123")
+	if err != nil {
+		t.Fatalf("unexpected error %v", err)
+	}
+
+	// get again to check calls
 	u, err := r.GetUserByID(context.Background(), "123")
 	if err != nil {
 		t.Fatalf("unexpected error %v", err)
@@ -72,5 +81,9 @@ func TestFetchFromAPI(t *testing.T) {
 
 	if !reflect.DeepEqual(expected, u) {
 		t.Fatalf("expected %v, got %v", expected, u)
+	}
+
+	if calls != 1 {
+		t.Fatalf("unexpected number of calls %d", calls)
 	}
 }
