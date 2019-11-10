@@ -20,7 +20,7 @@ func main() {
 
 	cfg := config.New()
 
-	cfg.Flags()
+	cfg.Flags(flag.CommandLine)
 
 	flag.Parse()
 
