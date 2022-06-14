@@ -33,7 +33,7 @@ func (c *Config) Flags(fs *flag.FlagSet) {
 }
 
 func (c *Config) Validate() []error {
-	errs := []error{}
+	var errs []error
 
 	if c.Port == "" {
 		errs = append(errs, fmt.Errorf("invalid port"))

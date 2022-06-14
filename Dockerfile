@@ -1,12 +1,3 @@
-FROM golangci/golangci-lint:v1.21.0 as lint 
-
-WORKDIR /app 
-
-COPY . .
-
-RUN golangci-lint run ./...
-
-
 FROM golang:1.13-stretch as builder
 
 WORKDIR /build

@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/jacoelho/codewars/internal/notifier"
@@ -13,7 +14,7 @@ type UserHonorUpdated func(context.Context, user.Event) error
 func UserHonorUpdatedCase(notify notifier.Notifier, repo user.Repository) UserHonorUpdated {
 	return func(ctx context.Context, event user.Event) error {
 		if event.HonorUpgraded == nil {
-			return fmt.Errorf("received empty event")
+			return errors.New("received empty event")
 		}
 
 		u, err := repo.GetUserByID(ctx, event.HonorUpgraded.ID)
