@@ -14,7 +14,7 @@ const WebhookEventHeader = "X-Webhook-Event"
 func LimitBodySize(size int64) func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+			r.Body = http.MaxBytesReader(w, r.Body, size)
 			h.ServeHTTP(w, r)
 		})
 	}
