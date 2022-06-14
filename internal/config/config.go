@@ -1,8 +1,8 @@
 package config
 
 import (
+	"errors"
 	"flag"
-	"fmt"
 	"os"
 )
 
@@ -36,15 +36,15 @@ func (c *Config) Validate() []error {
 	var errs []error
 
 	if c.Port == "" {
-		errs = append(errs, fmt.Errorf("invalid port"))
+		errs = append(errs, errors.New("invalid port"))
 	}
 
 	if c.SlackHook == "" {
-		errs = append(errs, fmt.Errorf("invalid slack webhook"))
+		errs = append(errs, errors.New("invalid slack webhook"))
 	}
 
 	if c.Secret == "" {
-		errs = append(errs, fmt.Errorf("invalid secret"))
+		errs = append(errs, errors.New("invalid secret"))
 	}
 
 	return errs
